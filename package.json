@@ -12,6 +12,7 @@
     "httpreq": "*",
     "stylus": "*",
     "async": "0.2.7",
-    "mkdirp": "*"
+    "mkdirp": "*",
+    "stream-splitter": "*"
   }
 }
