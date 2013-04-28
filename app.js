@@ -166,7 +166,10 @@ app.post('/ajax/search', function(req, res){
 		else {
 			var items = JSON.parse(data.body);
 			for(var i in items){
+				// thumburl still refers to mangafox
 				items[i][0] = baseUri + '/icon/' + items[i][0] + '.jpg';
+				// generate series url on localhost
+				items[i][2] = '/manga/' + items[i][2];
 			}
 			res.json(items);
 		}

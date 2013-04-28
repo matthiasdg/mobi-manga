@@ -22,10 +22,11 @@ Searchbox = {
 			},
 			highlighter: function(item){
 				// look up item
-				var founditem = {image: Searchbox.results[item][0],
-								title: Searchbox.results[item][1],
-								author: Searchbox.results[item][4]
-							};
+				var founditem = {	image: Searchbox.results[item][0],
+									title: Searchbox.results[item][1],
+									url: Searchbox.results[item][2],
+									author: Searchbox.results[item][4]
+								};
 				console.log(founditem);
 				return $("#dropdownitem").tmpl(founditem).html();
 			}
