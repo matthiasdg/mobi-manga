@@ -14,6 +14,7 @@ var express = require('express')
 	, path = require('path');
 
 var app = express();
+var generator = require(require('./config').generator);
 var baseUri = 'http://mangafox.me';
 
 // all environments
@@ -295,7 +296,7 @@ app.get('/manga/:mangatitle', function(req, res){
 	});
 });
 
-
+generator.generateEbook();
 // load database before starting server
 var mangas = nStore.new(__dirname + '/data/mangas.db', function(){
 	http.createServer(app).listen(app.get('port'), function(){

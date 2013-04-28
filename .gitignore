@@ -2,3 +2,5 @@ node_modules
 *.css
 *.orig
 .DS_Store
+*.mobi
+*.epub
