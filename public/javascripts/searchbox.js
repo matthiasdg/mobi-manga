@@ -29,7 +29,16 @@ Searchbox = {
 								};
 				console.log(founditem);
 				return $("#dropdownitem").tmpl(founditem).html();
+			},
+
+			// filtering already happened on mangafox
+			matcher: function () { return true; },
+
+			updater: function(item){
+				document.location = Searchbox.results[item][2];
+				return item;
 			}
+
 		});
 	}
 };

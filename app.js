@@ -300,7 +300,7 @@ app.get('/manga/:mangatitle', function(req, res){
 	});
 });
 
-generator.generateEbook(__dirname + '/data/nobunaga_no_chef/v01/c002', 'testjentencrazy');
+// generator.generateEbook(__dirname + '/data/nobunaga_no_chef/v01/c002', 'testjentencrazy');
 // load database before starting server
 var mangas = nStore.new(__dirname + '/data/mangas.db', function(){
 	http.createServer(app).listen(app.get('port'), function(){
