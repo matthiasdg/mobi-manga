@@ -38,12 +38,15 @@ html
 				#description !{manga.description}
 				br(style="clear:both")
 				br
+				br
 
 				ul#volumelist
 					for volume in manga.volumes
 						li.volume #{volume.name}
-							a(href='#', data-url='#{volume.url}') Download or prepare for download
-							ul#chapterlist
-								for chapter in volume.chapterlist
-									li.chapter #{chapter.name}
-										a(href='#', onclick="Manga.downloadChaptersFromList(['#{chapter.url}']);return false;", data-url='#{chapter.url}') Download or prepare for download
+								div.volumetop
+									a.volumelink(href='#', data-url='#{volume.url}') Download or prepare for download This keyword value indicates to truncate the text at the limit of the content area, therefore the truncation can happen in themiddleofacharacter. To truncate at the transition between two characters, the empty string value ('') must be used. The value clip is the default for this property.
+									i.icon-refresh.icon-white
+								ul.chapterlist
+									for chapter in volume.chapterlist
+										li.chapter #{chapter.name}
+											a.chapterlink(href='#', onclick="Manga.downloadChaptersFromList(['#{chapter.url}']);return false;", data-url='#{chapter.url}') Download or prepare for download
