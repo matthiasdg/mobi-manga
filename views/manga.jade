@@ -10,6 +10,7 @@ html
 		script(src='//cdnjs.cloudflare.com/ajax/libs/backbone.js/0.9.2/backbone-min.js')
 		script(src='//netdna.bootstrapcdn.com/twitter-bootstrap/2.3.1/js/bootstrap.min.js')
 		script(src='/javascripts/manga.js')
+		script(src='/javascripts/bootbox.min.js')
 
 
 		link(rel='stylesheet', href="//netdna.bootstrapcdn.com/twitter-bootstrap/2.3.1/css/bootstrap.min.css")
@@ -49,4 +50,5 @@ html
 								ul.chapterlist
 									for chapter in volume.chapterlist
 										li.chapter #{chapter.name}
-											a.chapterlink(href='#', onclick="Manga.downloadChaptersFromList(['#{chapter.url}']);return false;", data-url='#{chapter.url}') Download or prepare for download
+											a.chapterlink(href='#', onclick="bootbox.confirm('test', function(result){ console.log(result);});return false;", data-url='#{chapter.url}') Download or prepare for download
+//- Manga.downloadChaptersFromList(['#{chapter.url}'])
