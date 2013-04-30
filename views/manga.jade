@@ -43,12 +43,17 @@ html
 
 				ul#volumelist
 					for volume in manga.volumes
-						li.volume #{volume.name}
+						li.volume(id='#{volume.id}')
 								div.volumetop
-									a.volumelink(href='#', data-url='#{volume.url}') Download or prepare for download This keyword value indicates to truncate the text at the limit of the content area, therefore the truncation can happen in themiddleofacharacter. To truncate at the transition between two characters, the empty string value ('') must be used. The value clip is the default for this property.
+									a.volumelink(href='#') #{volume.title}
 									i.icon-refresh.icon-white
 								ul.chapterlist
 									for chapter in volume.chapterlist
-										li.chapter #{chapter.name}
-											a.chapterlink(href='#', onclick="bootbox.confirm('test', function(result){ console.log(result);});return false;", data-url='#{chapter.url}') Download or prepare for download
+										li.chapter(id='#{chapter.id}')
+											a.chapterlink(href='#', onclick="bootbox.confirm('test', function(result){ if(result) window.open('/data/testjentencrazy.mobi');});return false;", data-url='#{chapter.url}') #{chapter.title}
+											i.icon-refresh
 //- Manga.downloadChaptersFromList(['#{chapter.url}'])
+
+
+
+
