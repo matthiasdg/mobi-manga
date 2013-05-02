@@ -12,6 +12,6 @@
     "httpreq": "*",
     "stylus": "*",
     "async": "0.2.7",
-    "mkdirp": "*"
+    "fs-extra": "~0.6.0"
   }
 }

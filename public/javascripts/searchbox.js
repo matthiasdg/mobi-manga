@@ -1,12 +1,10 @@
 Searchbox = {
 	results: {},
 	pageloaded: function(){
-		$("#searchbox").focus();
 		$("#searchbox").typeahead({
 			minLength: 2,
 			source: function(typed, callback){
-				$.post('/ajax/search', {term: typed}, function(data) {
-					console.log(data);
+				$.get('/ajax/search', {term: typed}, function(data) {
 					if(data && data.length >0){
 						var titles = [];
 						for(var i in data){
@@ -27,7 +25,6 @@ Searchbox = {
 									url: Searchbox.results[item][2],
 									author: Searchbox.results[item][4]
 								};
-				console.log(founditem);
 				return $("#dropdownitem").tmpl(founditem).html();
 			},
 
@@ -40,6 +37,7 @@ Searchbox = {
 			}
 
 		});
+		$("#searchbox").focus();
 	}
 };
 

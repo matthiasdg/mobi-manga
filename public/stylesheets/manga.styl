@@ -26,6 +26,25 @@ ul
 	margin-right 5px
 	float right
 
+// animate icon-refresh
+.icon-refresh
+	-webkit-animation-name rotatit
+	animation-name rotatit
+	-webkit-animation-duration 1s
+	animation-duration 1s
+	-webkit-animation-iteration-count infinite
+	animation-iteration-count infinite
+	-webkit-animation-timing-function linear
+	animation-timing-function linear
+
+
+@keyframes rotatit
+	from
+		-webkit-transform scale( 1 ) rotate( 0deg )
+		transform scale( 1 ) rotate( 0deg )
+	to
+		-webkit-transform scale( 1 ) rotate( 360deg )
+		transform scale( 1 ) rotate( 360deg )
 
 #volumelist
 	margin-left 0px

@@ -6,8 +6,13 @@ html
 		meta(name='viewport', content='initial-scale=1.0, user-scalable=no')
 		script(src='//code.jquery.com/jquery.min.js')
 		script(src='//ajax.microsoft.com/ajax/jquery.templates/beta1/jquery.tmpl.min.js')
-		script(src='//cdnjs.cloudflare.com/ajax/libs/underscore.js/1.4.2/underscore-min.js')
-		script(src='//cdnjs.cloudflare.com/ajax/libs/backbone.js/0.9.2/backbone-min.js')
+		link(rel='stylesheet', href="//netdna.bootstrapcdn.com/twitter-bootstrap/2.3.1/css/bootstrap.min.css")
+		style
+			body {
+				padding-top: 60px; /* 60px to make the container go all the way to the bottom of the topbar */
+				}
+		link(href="//netdna.bootstrapcdn.com/twitter-bootstrap/2.3.1/css/bootstrap-responsive.min.css", rel="stylesheet")
+		link(rel='stylesheet', href='/stylesheets/collection.css')
 		script(src='//netdna.bootstrapcdn.com/twitter-bootstrap/2.3.1/js/bootstrap.min.js')
 		script(src='/javascripts/searchbox.js')
 		script#dropdownitem(type='text/x-tmpl')
@@ -18,14 +23,6 @@ html
 					.summary
 						h5.media-heading ${title}
 						${author}
-
-		link(rel='stylesheet', href="//netdna.bootstrapcdn.com/twitter-bootstrap/2.3.1/css/bootstrap.min.css")
-		style
-			body {
-				padding-top: 60px; /* 60px to make the container go all the way to the bottom of the topbar */
-				}
-		link(href="//netdna.bootstrapcdn.com/twitter-bootstrap/2.3.1/css/bootstrap-responsive.min.css", rel="stylesheet")
-		link(rel='stylesheet', href='/stylesheets/collection.css')
 
 		body
 			.navbar.navbar-inverse.navbar-fixed-top

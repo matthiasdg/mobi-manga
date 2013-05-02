@@ -8,12 +8,14 @@ var express = require('express')
 	, cheerio = require('cheerio')
 	, httpreq = require('httpreq')
 	, async = require('async')
-	, mkdirp = require('mkdirp')
-	, fs = require('fs')
+	, fs = require('fs-extra')
 	, nStore = require('nstore')
 	, path = require('path');
 
 var app = express();
+var mangas = nStore.new(__dirname + '/data/mangas.db', function(){
+
+});
 var generator = require(require('./config').generator);
 var baseUri = 'http://mangafox.me';
 
@@ -80,7 +82,7 @@ function downloadPage(page, nrOfDigits, callback){
 		var futureFilename = pad(page.split('/').slice(-1)[0].split('.')[0], nrOfDigits) + '.' + extension;
 		var fileDirPath = __dirname + '/data/' + page.split('/').slice(4, -1).join('/');
 		var filePath = fileDirPath + '/' + futureFilename;
-		mkdirp(fileDirPath, function(err){
+		fs.mkdirs(fileDirPath, function(err){
 			if(err) return callback(err, null);
 			async.waterfall([
 				function(asyncDone){
@@ -122,13 +124,13 @@ function downloadChapter(chapter, callback){
 		var $ = cheerio.load(data.body);
 		var nrPages = $('select.m').first().children().length -1;
 		// we'll pad the image names with leading zero's: necessary for conversion
-		var nrOfDigits = nrPages.toString().length;
+		var nrOfDigits = 4;
 		// baseLink: part before 1.html
 		var baseLink = chapter.split('/').slice(0, -1).join('/');
 		var pageList =[];
 		for(var i = 1; i <= nrPages; i++)
 			pageList.push(baseLink + '/' + i + '.html');
-		downloadPages(pageList, nrOfDigits, callback);
+		downloadPages(pageList, 4, callback);
 	});
 }
 
@@ -159,35 +161,130 @@ function getNrOfPagesFromList(chapterList, callback){
 }
 
 
-app.post('/ajax/search', function(req, res){
+function mergeImageFolders(pathList, callback){
+	var size = pathList.length;
+	// last folder contains first images
+	var destination = pathList[size - 1];
+	fs.readdir(destination, function(err, files){
+		var nrOfImages = 0;
+		for(var i = 0; i < files.length; i++){
+			var isImage = (/\.(gif|jpg|jpeg|tif|tiff|png|bmp)$/i).test(files[i]);
+			if(isImage) nrOfImages++;
+		}
+		var sourceFolders = pathList.slice(0, -1).reverse();
+		async.eachSeries(sourceFolders, function(dir, asyncDone){
+			fs.readdir(dir, function(err, files){
+				async.eachSeries(files, function(file, innerDone){
+					var okImage = (/[0-9]+\.(gif|jpg|jpeg|tif|tiff|png|bmp)$/i).test(file);
+					if(okImage){
+						var parts = file.split('.');
+						var imageNumber = parseInt(parts[0], 10);
+						fs.rename(path.join(dir, file), path.join(destination, pad(imageNumber + nrOfImages, 4) + '.' + parts[1]), innerDone);
+					}
+					else innerDone(null);
+				}, asyncDone);
+			});
+
+		}, function(err){
+			callback(err, destination);
+		});
+	});
+}
+
+function successHandler(codeFileObject){
+	if(codeFileObject.file){
+		var fileName = codeFileObject.file;
+		var seriesIndex = fileName.indexOf('/books/') + 7;
+		var bookUrl = fileName.slice(seriesIndex);
+		var tempArray = bookUrl.split('/');
+		var series = tempArray[0];
+		// image folders are still left
+		fs.remove(__dirname + '/data/' + series);
+		var bookId = tempArray.slice(-1)[0].split('.')[0];
+		mangas.get(series, function(err, doc, key){
+			if(err){
+				// not possible, already saved on beginning of download
+				console.log("Something is wrong with the database! Can't find entry for: " + series + '!');
+			}
+			else{
+				doc.books[bookId] = bookUrl;
+				mangas.save(series, doc, function(er){
+					if(er){
+						console.log(er);
+					}
+				});
+			}
+		});
+	}
+}
+
+app.get('/ajax/search', function(req, res){
 	// browser did 'post' but got empty result, 'get' seems to work better?
-	httpreq.get(baseUri + '/ajax/search.php', {parameters: {term: req.body.term}},function(err, data){
+	httpreq.get(baseUri + '/ajax/search.php', {parameters: {term: req.query.term}},function(err, data){
 		if(err) res.json({err: err});
 		else {
 			var items = JSON.parse(data.body);
 			for(var i in items){
-				// thumburl still refers to mangafox
+				// generate series url on localhost, id parameter cannot always be scraped from series page -> put it onto the URL
+				// could store this in database but every save generates an extra line in the dbase file...
+				items[i][2] = '/manga/' + items[i][2] + '?id=' + items[i][0];
+				// generate thumburl (still refers to mangafox)
 				items[i][0] = baseUri + '/icon/' + items[i][0] + '.jpg';
-				// generate series url on localhost
-				items[i][2] = '/manga/' + items[i][2];
 			}
 			res.json(items);
 		}
 	});
 });
 
-app.post('/ajax/downloadchaptersfromlist', function(req, res){
-	console.log((new Date()).toString());
-	downloadChaptersFromList(req.body.list, function(err, pathList){
-		if(err) console.log(err);
-		console.log((new Date()).toString() + ' : ' + pathList);
+app.post('/ajax/generatebook', function(req, res){
+	var list = req.body.list;
+	var bookRef = req.body.bookref;
+	var id = req.body.id;
+	var title = req.body.title;
+	var bookRefSplit = bookRef.split('/');
+	var series = bookRefSplit[1];
+	var bookId = bookRefSplit.slice(-1)[0];
+	var error = 0;
+	// write in dbase -> no multiple generations of the same file at the same time
+	mangas.get(series, function(err, doc, key){
+		// document not defined -> error create a new
+		if(err){
+			doc = {id: id};
+			doc.books = {};
+			doc.books[bookId] = '#'; // becomes book-url -> update it after successful creation
+		}
+		else doc.books[bookId] = '#';
+		mangas.save(series, doc, function(err){
+			if(err) return res.json({err: error});
+
+			downloadChaptersFromList(list, function(err, pathList){
+				if(err) console.log(err);
+				else{
+					async.waterfall([
+						function(asyncDone){
+							if(pathList.length > 1){
+								mergeImageFolders(pathList, asyncDone);
+							}
+							else{
+								asyncDone(null, pathList[0]);
+							}
+						}],
+						function(error, onePath){
+							if(err) console.log(err);
+							generator.generatEbook(onePath, __dirname + '/data/books' + bookRef, series + ': ' + title, null, null, successHandler);
+						}
+					);
+				}
+			});
+			// Fire and forget; not in callback
+			res.json({err: 0});
+		});
+
 	});
-	// Fire and forget
-	res.json({err: 0});
 });
 
-app.get('/ajax/getnrofpagesfromlist', function(req, res){
-	getNrOfPagesFromList(req.query.list, function(err, nrOfPages){
+app.post('/ajax/getnrofpagesfromlist', function(req, res){
+	getNrOfPagesFromList(req.body.list, function(err, nrOfPages){
 		if(err) res.json({err: err});
 		else res.json({nrofpages: nrOfPages});
 	});
@@ -230,7 +327,7 @@ app.get('/mangafox', function(req, res){
 						var itemAsArray = JSON.parse(data.body);
 						item = {
 							id: id_url.id,
-							url: id_url.url.replace(baseUri, ''),
+							url: id_url.url.replace(baseUri, '').slice(0, -1) + '?id=' + id_url.id,
 							title: itemAsArray[0],
 							author: itemAsArray[3],
 							description: itemAsArray[9],
@@ -255,60 +352,69 @@ app.get('/mangafox', function(req, res){
 });
 
 app.get('/manga/:mangatitle', function(req, res){
-
-	httpreq.get(baseUri + '/manga/' + req.params.mangatitle, function(err, data){
-		if(err) res.send(err.stack);
-		else{
-			var $ = cheerio.load(data.body);
-			var titleThing = $('#title');
-			var title = titleThing.find('h1').first().text();
-			var description = titleThing.find('.summary').first().html();
-			var image = $('#series_info').find('img').first().attr('src');
-			var author = titleThing.find('table').find('a').eq(1).text();
-			var manga = {	title: title,
-							id: req.params.mangatitle,
-							author: author,
-							description: description,
-							image: image
-						};
-			manga.volumes = [];
-			var volumes = $('#chapters').find(".volume");
-			var chapterLists = $('#chapters').find('.chlist');
-			if(volumes.length !== chapterLists.length) console.log('Warning: #volumes != #chapterlists');
-			volumes.each(function(i, element){
-				// latest volumes are on top, we also generate an id for series without volumes
-				var id = 'v' + pad(volumes.length -i, 2);
-				var chapText = $(element).find('span').first().text();
-				var title = $(element).text().replace(chapText, ' (contains ' + chapText.slice(1) + ')');
-				manga.volumes[i] = {title: title, id: id, chapterlist: []};
-			});
-			chapterLists.each(function(i, element){
-				// chapters have h3 and h4 headings!?
-				var headings = $(element).find('h3, h4');
-				manga.volumes[i].chapterlist = [];
-				headings.each(function(j, heading){
-					var url = $(heading).find('a').attr('href');
-					manga.volumes[i].chapterlist[j] = {
-						title : $(heading).text().replace(/\r\n\t\t*/,' ').replace(/\t*/g, ''),
-						url : url,
-						id: url.split('/').slice(-2, -1)[0]
-					};
-				});
-			});
-
-			res.render('manga', {
-				title: manga.title,
-				manga: manga
-			});
+	mangas.get(req.params.mangatitle, function(err, dBManga, key){
+		if(err) {
+			dBManga = {id: req.query.id};
+			dBManga.books = {};
 		}
+
+		httpreq.get(baseUri + '/manga/' + req.params.mangatitle, function(err, data){
+			if(err) res.send(err.stack);
+			else{
+				var $ = cheerio.load(data.body);
+				var titleThing = $('#title');
+				var title = titleThing.find('h1').first().text();
+				var description = titleThing.find('.summary').first().html();
+				var image = $('#series_info').find('img').first().attr('src');
+				var author = titleThing.find('table').find('a').eq(1).text();
+				var manga = {	title: title,
+								id: req.params.mangatitle,
+								author: author,
+								description: description,
+								image: image
+							};
+				manga.volumes = [];
+				var volumes = $('#chapters').find(".volume");
+				var chapterLists = $('#chapters').find('.chlist');
+				if(volumes.length !== chapterLists.length) console.log('Warning: #volumes != #chapterlists');
+				volumes.each(function(i, element){
+					// latest volumes are on top, we also generate an id for series without volumes
+					var id = 'v' + pad(volumes.length -i, 2);
+					var chapText = $(element).find('span').first().text();
+					var title = $(element).text().replace(chapText, ' (contains ' + chapText.slice(1) + ')');
+					var url = '/' + req.params.mangatitle + '/' + id + '.html';
+					if(dBManga.books[id]) url = '/data/books/' + dBManga.books[id];
+					manga.volumes[i] = {title: title, id: id, url: url, chapterlist: []};
+				});
+				chapterLists.each(function(i, element){
+					// chapters have h3 and h4 headings!?
+					var headings = $(element).find('h3, h4');
+					manga.volumes[i].chapterlist = [];
+					headings.each(function(j, heading){
+						var url = $(heading).find('a').attr('href');
+						var id = url.split('/').slice(-2, -1)[0];
+						if(dBManga.books[id]) url = '/data/books/' + dBManga.books[id];
+						manga.volumes[i].chapterlist[j] = {
+							title : $(heading).text().replace(/\r\n\t+/,' ').replace(/\t*/g, ''),
+							url : url,
+							id: id
+						};
+					});
+				});
+
+				res.render('manga', {
+					title: manga.title,
+					manga: manga
+				});
+			}
+		});
+
 	});
+
 });
 
-// generator.generateEbook(__dirname + '/data/nobunaga_no_chef/v01/c002', 'testjentencrazy');
-// load database before starting server
-var mangas = nStore.new(__dirname + '/data/mangas.db', function(){
-	http.createServer(app).listen(app.get('port'), function(){
-		console.log('Express server listening on port ' + app.get('port'));
-	});
 
+http.createServer(app).listen(app.get('port'), function(){
+	console.log('Express server listening on port ' + app.get('port'));
 });
+

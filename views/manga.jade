@@ -11,7 +11,8 @@ html
 		script(src='//netdna.bootstrapcdn.com/twitter-bootstrap/2.3.1/js/bootstrap.min.js')
 		script(src='/javascripts/manga.js')
 		script(src='/javascripts/bootbox.min.js')
-
+		script(src='/javascripts/spin.min.js')
+		script(src='/javascripts/jquery.spin.js')
 
 		link(rel='stylesheet', href="//netdna.bootstrapcdn.com/twitter-bootstrap/2.3.1/css/bootstrap.min.css")
 		style
@@ -45,14 +46,20 @@ html
 					for volume in manga.volumes
 						li.volume(id='#{volume.id}')
 								div.volumetop
-									a.volumelink(href='#') #{volume.title}
-									i.icon-refresh.icon-white
+									- var volicon = 'icon-download';
+									- if(volume.url === '#') volicon = 'icon-refresh';
+									- else if((/\.(mobi|epub)$/i).test(volume.url)) volicon = 'icon-remove';
+									a.volumelink(href='#', onclick="Manga.checkForDownload('#{volume.id}');return false;", data-url='#{volume.url}') #{volume.title}
+									i.icon-white(class="#{volicon}")
 								ul.chapterlist
 									for chapter in volume.chapterlist
+										- var chapicon = 'icon-download';
+										- if(chapter.url === '#') chapicon = 'icon-refresh';
+										- else if((/\.(pdf|epub)$/i).test(volume.url)) chapicon = 'icon-remove';
 										li.chapter(id='#{chapter.id}')
-											a.chapterlink(href='#', onclick="bootbox.confirm('test', function(result){ if(result) window.open('/data/testjentencrazy.mobi');});return false;", data-url='#{chapter.url}') #{chapter.title}
-											i.icon-refresh
-//- Manga.downloadChaptersFromList(['#{chapter.url}'])
+											a.chapterlink(href='#', onclick="Manga.checkForDownload('#{chapter.id}');return false;", data-url='#{chapter.url}') #{chapter.title}
+											i(class="#{chapicon}")
+
 
 
 
