@@ -29,6 +29,8 @@ Manga = {
 			bootbox.confirm('Continue downloading ' + $jQelem.find('a').first().text() + '?', function(confirmed){
 				if(confirmed) window.location = url;
 			});
+			$('.modal').css({'margin-top': clickedTop, 'top': 0});
+			$('.modal-backdrop.fade').css({'height': $(document).height()});
 		}
 		else{
 			var listOfChapters = [];

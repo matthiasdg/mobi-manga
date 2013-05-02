@@ -55,7 +55,7 @@ html
 									for chapter in volume.chapterlist
 										- var chapicon = 'icon-download';
 										- if(chapter.url === '#') chapicon = 'icon-refresh';
-										- else if((/\.(pdf|epub)$/i).test(volume.url)) chapicon = 'icon-remove';
+										- else if((/\.(mobi|epub)$/i).test(volume.url)) chapicon = 'icon-remove';
 										li.chapter(id='#{chapter.id}')
 											a.chapterlink(href='#', onclick="Manga.checkForDownload('#{chapter.id}');return false;", data-url='#{chapter.url}') #{chapter.title}
 											i(class="#{chapicon}")

@@ -172,7 +172,9 @@ function mergeImageFolders(pathList, callback){
 			if(isImage) nrOfImages++;
 		}
 		var sourceFolders = pathList.slice(0, -1).reverse();
+		var latestImage = nrOfImages;
 		async.eachSeries(sourceFolders, function(dir, asyncDone){
+			nrOfImages = latestImage; //this gets updated every outer loop
 			fs.readdir(dir, function(err, files){
 				async.eachSeries(files, function(file, innerDone){
 					var okImage = (/[0-9]+\.(gif|jpg|jpeg|tif|tiff|png|bmp)$/i).test(file);
@@ -180,6 +182,7 @@ function mergeImageFolders(pathList, callback){
 						var parts = file.split('.');
 						var imageNumber = parseInt(parts[0], 10);
 						fs.rename(path.join(dir, file), path.join(destination, pad(imageNumber + nrOfImages, 4) + '.' + parts[1]), innerDone);
+						latestImage = imageNumber + nrOfImages;
 					}
 					else innerDone(null);
 				}, asyncDone);
