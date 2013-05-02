@@ -1,3 +1,4 @@
+
 Manga = {
 	pageloaded: function(){
 		$('#volumelist').on('click', '.icon-remove', function(e){
@@ -20,6 +21,8 @@ Manga = {
 	checkForDownload: function(id){
 		var $jQelem = $('#' + id);
 		var $spinner = $jQelem;
+		// Kindle PW browser doesn't support scrollTop nor its alternatives
+		var clickedTop = $jQelem.offset().top;
 		var url = $jQelem.find('a').first().attr('data-url');
 		var extension = url.split('.').slice(-1)[0];
 		if(extension === 'mobi' || extension === 'epub'){
@@ -64,6 +67,10 @@ Manga = {
 							Manga.generatEbook(id, bookRef, title, listOfChapters);
 						}
 					});
+					// bootbox at correct height
+					// background-height = document (<-> window if position fixed)
+					$('.modal').css({'margin-top': clickedTop, 'top': 0});
+					$('.modal-backdrop.fade').css({'height': $(document).height()});
 				}
 			});
 		}
