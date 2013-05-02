@@ -8,7 +8,6 @@
 this.generator = __dirname + '/generators/kcc.js';
 
 
-
 // kcc: configures the specifics of the kcc generator
 
 this.kcc = {
