@@ -29,7 +29,7 @@ Manga = {
 			bootbox.confirm('Continue downloading ' + $jQelem.find('a').first().text() + '?', function(confirmed){
 				if(confirmed) window.location = url;
 			});
-			$('.modal').css({'margin-top': clickedTop, 'top': 0});
+			$('.modal').css({'margin-top': clickedTop - $('.modal').height()/2, 'top': 0});
 			$('.modal-backdrop.fade').css({'height': $(document).height()});
 		}
 		else{
@@ -69,9 +69,9 @@ Manga = {
 							Manga.generatEbook(id, bookRef, title, listOfChapters);
 						}
 					});
-					// bootbox at correct height
+					// bootbox at correct height: bottom in middle of clicked element
 					// background-height = document (<-> window if position fixed)
-					$('.modal').css({'margin-top': clickedTop, 'top': 0});
+					$('.modal').css({'margin-top': clickedTop - $('.modal').height() + $('.chapterlink').height(), 'top': 0});
 					$('.modal-backdrop.fade').css({'height': $(document).height()});
 				}
 			});
