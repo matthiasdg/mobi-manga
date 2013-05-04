@@ -198,8 +198,8 @@ function successHandler(codeFileObject){
 	if(codeFileObject.file){
 		var fileName = codeFileObject.file;
 		var seriesIndex = fileName.indexOf('/books/') + 7;
-		var bookUrl = fileName.slice(seriesIndex);
-		var tempArray = bookUrl.split('/');
+		var bookPath = fileName.slice(seriesIndex);
+		var tempArray = bookPath.split('/');
 		var series = tempArray[0];
 		// image folders are still left
 		fs.remove(__dirname + '/data/' + series);
@@ -210,7 +210,8 @@ function successHandler(codeFileObject){
 				console.log("Something is wrong with the database! Can't find entry for: " + series + '!');
 			}
 			else{
-				doc.books[bookId] = bookUrl;
+				// we prefixed the filename with the series name + _ to generate different files on the kindle. The bookid in the database does not include this prefix, hence strip it
+				doc.books[bookId.split('_').slice(-1)[0]] = bookPath;
 				mangas.save(series, doc, function(er){
 					if(er){
 						console.log(er);
@@ -238,6 +239,25 @@ app.get('/ajax/search', function(req, res){
 		}
 	});
 });
+
+
+app.get('/ajax/deletebook', function(req, res){
+	var key = req.query.key;
+	var id = req.query.field;
+	mangas.get(key, function(err, obj, k){
+		if(err) return res.json({err: err});
+		console.log(JSON.stringify(obj));
+		console.log(obj.books[id]);
+		fs.remove(path.join(__dirname, 'data', 'books', obj.books[id]));
+		delete obj.books[id];
+		console.log(JSON.stringify(obj));
+		mangas.save(key, obj, function(er){
+			if(err) return res.json({err:err});
+			res.json({err:0});
+		});
+	});
+});
+
 
 app.post('/ajax/generatebook', function(req, res){
 	var list = req.body.list;
@@ -274,7 +294,8 @@ app.post('/ajax/generatebook', function(req, res){
 						}],
 						function(error, onePath){
 							if(err) console.log(err);
-							generator.generatEbook(onePath, __dirname + '/data/books' + bookRef, series + ': ' + title, null, null, successHandler);
+							var fileName = bookRefSplit.slice(0, -1).join('/') + '/' + series + '_' + bookId;
+							generator.generatEbook(onePath, __dirname + '/data/books' + fileName, series + ': ' + title, null, null, successHandler);
 						}
 					);
 				}
@@ -371,7 +392,7 @@ app.get('/manga/:mangatitle', function(req, res){
 				var image = $('#series_info').find('img').first().attr('src');
 				var author = titleThing.find('table').find('a').eq(1).text();
 				var manga = {	title: title,
-								id: req.params.mangatitle,
+								key: req.params.mangatitle,
 								author: author,
 								description: description,
 								image: image

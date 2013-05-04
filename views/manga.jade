@@ -33,7 +33,7 @@ html
 								a(href='/mangafox') Mangafox
 
 
-			.container
+			.container(id="#{manga.key}")
 				h2 #{manga.title}
 				h5 #{manga.author}
 				img.image(src="#{manga.image}").pull-left
@@ -45,20 +45,23 @@ html
 				ul#volumelist
 					for volume in manga.volumes
 						li.volume(id='#{volume.id}')
-								div.volumetop
-									- var volicon = 'icon-download';
-									- if(volume.url === '#') volicon = 'icon-refresh';
-									- else if((/\.(mobi|epub)$/i).test(volume.url)) volicon = 'icon-remove';
+								.volumetop
+									- var volicon = 'icon-download'; var voliclass='';
+									//- temporary (invalid) url during file generation ends in #
+									- if((/#$/).test(volume.url)) volicon = 'icon-refresh';
+									- else if((/\.(mobi|epub)$/i).test(volume.url)) {volicon = 'icon-remove'; voliclass='btn btn-mini btn-inverse';}
 									a.volumelink(href='#', onclick="Manga.checkForDownload('#{volume.id}');return false;", data-url='#{volume.url}') #{volume.title}
-									i.icon-white(class="#{volicon}")
+									.wrapper(class="#{voliclass}")
+										i.icon-white(class="#{volicon}")
 								ul.chapterlist
 									for chapter in volume.chapterlist
-										- var chapicon = 'icon-download';
-										- if(chapter.url === '#') chapicon = 'icon-refresh';
-										- else if((/\.(mobi|epub)$/i).test(chapter.url)) chapicon = 'icon-remove';
+										- var chapicon = 'icon-download'; var chapiclass='';
+										- if((/#$/).test(chapter.url)) chapicon = 'icon-refresh';
+										- else if((/\.(mobi|epub)$/i).test(chapter.url)) {chapicon = 'icon-remove'; chapiclass='btn btn-mini';}
 										li.chapter(id='#{chapter.id}')
 											a.chapterlink(href='#', onclick="Manga.checkForDownload('#{chapter.id}');return false;", data-url='#{chapter.url}') #{chapter.title}
-											i(class="#{chapicon}")
+											.wrapper(class="#{chapiclass}")
+												i(class="#{chapicon}")
 
 
 
