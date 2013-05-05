@@ -10,6 +10,7 @@ var express = require('express')
 	, async = require('async')
 	, fs = require('fs-extra')
 	, nStore = require('nstore')
+	, nStore = nStore.extend(require('nstore/query')())
 	, path = require('path');
 
 var app = express();
@@ -319,9 +320,45 @@ app.get('/', function(req, res){
 });
 
 app.get('/local', function(req, res){
-	res.render('collection', {
-		title: 'mobi manga: local collection',
-		localCollection: []
+	var localCollection = [];
+	mangas.all(function(err, results){
+		if(err) res.send(err.stack);
+		else{
+			console.log(results);
+			for(var key in results){
+				var books = results[key].books;
+				if(Object.keys(books).length > 0){
+					localCollection.push({id: results[key].id, url: '/manga/' + key + '?id=' + results[key].id});
+				}
+			}
+
+			async.mapLimit(localCollection, 5, function(id_url, transformCallback){
+				httpreq.post(baseUri + '/ajax/series.php', {parameters: {sid: id_url.id}}, function(err, data){
+					if(err) transformCallback(err, null);
+					else {
+						var itemAsArray = JSON.parse(data.body);
+						item = {
+							id: id_url.id,
+							url: id_url.url,
+							title: itemAsArray[0],
+							author: itemAsArray[3],
+							description: itemAsArray[9],
+							image: itemAsArray[10]
+						};
+						transformCallback(null, item);
+					}
+				});
+			},
+			function(err, itemList){
+				if(err) res.send(err.stack);
+				else{
+					res.render('collection', {
+						title: 'mobi manga: local collection',
+						localCollection: itemList
+					});
+				}
+			});
+		}
 	});
 });
 
