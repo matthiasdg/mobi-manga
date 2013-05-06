@@ -24,6 +24,11 @@ html
 						h5.media-heading ${title}
 						${author}
 
+		//- generate some script if local -> alter Searchbox.js functionality
+		- if(locals.localCollection)
+			script
+				Searchbox.isLocal = true;
+
 		body
 			.navbar.navbar-inverse.navbar-fixed-top
 				.navbar-inner

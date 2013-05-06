@@ -324,7 +324,6 @@ app.get('/local', function(req, res){
 	mangas.all(function(err, results){
 		if(err) res.send(err.stack);
 		else{
-			console.log(results);
 			for(var key in results){
 				var books = results[key].books;
 				if(Object.keys(books).length > 0){

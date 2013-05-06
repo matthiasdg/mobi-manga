@@ -30,8 +30,8 @@ this.kcc = {
 	// -c (cbz) is not (yet?) usable right now, -v, -t and -o are already used
 	// Comment/delete if you don't need this
 
-	options: ['--nopanelviewhq'],
-		  // ['-m', '--nopanelviewhq'],
+	options: //['--nopanelviewhq'],
+		   ['-m', '--nopanelviewhq'],
 
 
 
