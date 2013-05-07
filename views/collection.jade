@@ -29,28 +29,28 @@ html
 			script
 				Searchbox.isLocal = true;
 
-		body
-			.navbar.navbar-inverse.navbar-fixed-top
-				.navbar-inner
-					.container
+	body
+		.navbar.navbar-inverse.navbar-fixed-top
+			.navbar-inner
+				.container
 
-						ul.nav
-							li(class="#{(locals.localCollection || !locals.remoteCollection) ? 'active': ''}")
-								a(href='/local') Local
-							li(class="#{(locals.remoteCollection) ? 'active': ''}")
-								a(href='/mangafox') Mangafox
-						.nav-collapse(style='height:auto;')
-							.navbar-search.pull-right
-								-var placeholdertext = locals.remoteCollection ? 'mangafox' : 'locally';
-								input#searchbox.search-query(type='text', placeholder='search #{placeholdertext}')
+					ul.nav
+						li(class="#{(locals.localCollection || !locals.remoteCollection) ? 'active': ''}")
+							a(href='/local') Local
+						li(class="#{(locals.remoteCollection) ? 'active': ''}")
+							a(href='/mangafox') Mangafox
+					.nav-collapse(style='height:auto;')
+						.navbar-search.pull-right
+							-var placeholdertext = locals.remoteCollection ? 'mangafox' : 'locally';
+							input#searchbox.search-query(type='text', placeholder='search #{placeholdertext}')
 
-			.container
-				- var collection = locals.localCollection? localCollection : remoteCollection;
-				for item in collection
-					.well.item(id="#{item.id}")
-						a(href="#{item.url}")
-							.image(style="background-image:url('#{item.image}')")
-							h4 #{item.title}
-							h6 #{item.author}
-							.description !{item.description}
+		.container
+			- var collection = locals.localCollection? localCollection : remoteCollection;
+			for item in collection
+				.well.item(id="#{item.id}")
+					a(href="#{item.url}")
+						.image(style="background-image:url('#{item.image}')")
+						h4 #{item.title}
+						h6 #{item.author}
+						.description !{item.description}
 
