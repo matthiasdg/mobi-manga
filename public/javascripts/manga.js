@@ -28,6 +28,22 @@ Manga = {
 			Manga.alignBootBox(clickedTop);
 
 		});
+		if(!Manga.socket){
+			// socket.io initialiseren
+			Manga.socket = io.connect(window.location.hostname);
+			// some debugging statements concerning socket.io
+			Manga.socket.on('reconnecting', function(seconds){
+				console.log('reconnecting in ' + seconds + ' seconds');
+			});
+			Manga.socket.on('reconnect', function(){
+				console.log('reconnected');
+			});
+			Manga.socket.on('reconnect_failed', function(){
+				console.log('failed to reconnect');
+			});
+			var series = $('h2').parent().attr('id');
+			Manga.socket.on(series, function(data){console.log(data);});
+		}
 	},
 
 
@@ -38,8 +54,8 @@ Manga = {
 	},
 
 	// posts because of big arrays
-	generatEbook: function(id, bookRef, title, listOfChapters){
-		$.post('/ajax/generatebook', {list: listOfChapters, bookref: bookRef, title: title, id: id}, function(data){
+	generatEbook: function(id, bookRef, title, listOfChapters, nrOfPages){
+		$.post('/ajax/generatebook', {list: listOfChapters, bookref: bookRef, title: title, id: id, pages: nrOfPages}, function(data){
 			if(data.err) console.log(data.err);
 		});
 	},
@@ -111,7 +127,7 @@ Manga = {
 								$anchor.attr('data-url', '#');
 								// hack to be able to store id in dbase upon save -> necessary to generate images for /local
 								var id = window.location.search.split('=')[1];
-								Manga.generatEbook(id, bookRef, title, listOfChapters);
+								Manga.generatEbook(id, bookRef, title, listOfChapters, data.nrofpages);
 							}
 						});
 						Manga.alignBootBox(clickedTop);

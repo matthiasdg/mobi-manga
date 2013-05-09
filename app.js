@@ -11,6 +11,7 @@ var express = require('express')
 	, fs = require('fs-extra')
 	, nStore = require('nstore')
 	, nStore = nStore.extend(require('nstore/query')())
+	, socketio = require('socket.io')
 	, path = require('path');
 
 var app = express();
@@ -38,11 +39,83 @@ if ('development' == app.get('env')) {
 	app.use(express.errorHandler());
 }
 
+var server = http.createServer(app);
+
+server.listen(app.get('port'), function(){
+	console.log('Express server listening on port ' + app.get('port'));
+});
+
+var io = socketio.listen(server);
+io.set('log level', 0);
+
+
 function pad(s, len) {
 	if (s.toString().length < len) {
 		s = ('0000000000000' + s).slice(-len);
 	}
 	return s;
+}
+
+// function/class to generate output to websocket
+
+function ProgressHandler(series, bookId, nrOfPages){
+	this.series = series;
+	this.bookId = bookId;
+	this.nrOfPages = nrOfPages;
+	this.processedPages = 0;
+}
+
+ProgressHandler.prototype.sendProgress = function(action){
+	io.sockets.emit(this.series, {bookId: this.bookId, progress: Math.round(this.processedPages/this.nrOfPages*100), action: action});
+}
+
+ProgressHandler.prototype.sendError = function(error){
+	io.sockets.emit(this.series, {bookId: this.bookId, error: error});
+	// maybe we should clean up files, but probably not necessary since images overwrite
+	// clear db entry, though!
+	var series = this.series;
+	var bookId = this.bookId;
+	mangas.get(series, function(err, doc, key){
+		if(err){
+			// not possible, already saved on beginning of download
+			console.log("Something is wrong with the database! Can't find entry for: " + series + '!');
+		}
+		else{
+			delete doc.books[bookId];
+			mangas.save(series, doc, function(er){
+				if(er){
+					console.log(er);
+				}
+			});
+		}
+	});
+}
+
+ProgressHandler.prototype.sendEnd = function(exitCode, fileName){
+	if(fileName){
+		var series = this.series;
+		var bookId = this.bookId;
+		var bookPathIndex = fileName.indexOf('/books/') + 7;
+		var bookPath = fileName.slice(bookPathIndex);
+		// image folders are still left; remove them
+		fs.remove(__dirname + '/data/' + series);
+		mangas.get(series, function(err, doc, key){
+			if(err){
+				// not possible, already saved on beginning of download
+				console.log("Something is wrong with the database! Can't find entry for: " + series + '!');
+			}
+			else{
+				doc.books[bookId] = bookPath;
+				mangas.save(series, doc, function(er){
+					if(er){
+						console.log(er);
+					}
+					io.sockets.emit(series, {exit: exitCode, file: '/data/books/' + bookPath});
+				});
+			}
+		});
+	}
+	else io.sockets.emit(this.series, {exit: exitCode});
 }
 
 
@@ -71,7 +144,7 @@ function requestImage(imageUrl, imageUrlAlternative, tries, callback){
 	});
 }
 
-function downloadPage(page, nrOfDigits, callback){
+function downloadPage(page, nrOfDigits, callback, progressHandler){
 	httpreq.get(page, function(err, data){
 		if(err) return callback(err, null);
 		var $ = cheerio.load(data.body);
@@ -95,6 +168,10 @@ function downloadPage(page, nrOfDigits, callback){
 					// replaces file if already exists -> no problem with aborted stuff
 					fs.writeFile(filePath, res.body, function(err){
 						if(err) return callback(err, null);
+						if(progressHandler) {
+							progressHandler.processedPages++;
+							progressHandler.sendProgress('download');
+						}
 						callback(null, filePath);
 					});
 				}
@@ -103,11 +180,11 @@ function downloadPage(page, nrOfDigits, callback){
 	});
 }
 
-function downloadPages(pageList, nrOfDigits, callback){
+function downloadPages(pageList, nrOfDigits, callback, progressHandler){
 	// not downloading in parallel but sequential
 	async.mapSeries(pageList,
 		function(page, asyncDone){
-			downloadPage(page, nrOfDigits, asyncDone);
+			downloadPage(page, nrOfDigits, asyncDone, progressHandler);
 		},
 		function(err, results){
 			if(err || !(results && results.length > 0) ) return callback(err, null);
@@ -119,7 +196,7 @@ function downloadPages(pageList, nrOfDigits, callback){
 
 
 // chapter: chapter's url on mangafox
-function downloadChapter(chapter, callback){
+function downloadChapter(chapter, callback, progressHandler){
 	httpreq.get(chapter,function(err, data){
 		if(err) return callback(err, null);
 		var $ = cheerio.load(data.body);
@@ -131,13 +208,15 @@ function downloadChapter(chapter, callback){
 		var pageList =[];
 		for(var i = 1; i <= nrPages; i++)
 			pageList.push(baseLink + '/' + i + '.html');
-		downloadPages(pageList, 4, callback);
+		downloadPages(pageList, 4, callback, progressHandler);
 	});
 }
 
 // mapLimit: limit number of iterations in parallel
-function downloadChaptersFromList(chapterList, callback){
-	async.mapLimit(chapterList, 2, downloadChapter, callback);
+function downloadChaptersFromList(chapterList, callback, progressHandler){
+	async.mapLimit(chapterList, 2, function(chapter, asyncDone){
+		downloadChapter(chapter, asyncDone, progressHandler);
+	}, callback);
 };
 
 function getNrOfPages(chapter, callback){
@@ -195,33 +274,7 @@ function mergeImageFolders(pathList, callback){
 	});
 }
 
-function successHandler(codeFileObject){
-	if(codeFileObject.file){
-		var fileName = codeFileObject.file;
-		var seriesIndex = fileName.indexOf('/books/') + 7;
-		var bookPath = fileName.slice(seriesIndex);
-		var tempArray = bookPath.split('/');
-		var series = tempArray[0];
-		// image folders are still left
-		fs.remove(__dirname + '/data/' + series);
-		var bookId = tempArray.slice(-1)[0].split('.')[0];
-		mangas.get(series, function(err, doc, key){
-			if(err){
-				// not possible, already saved on beginning of download
-				console.log("Something is wrong with the database! Can't find entry for: " + series + '!');
-			}
-			else{
-				// we prefixed the filename with the series name + _ to generate different files on the kindle. The bookid in the database does not include this prefix, hence strip it
-				doc.books[bookId.split('_').slice(-1)[0]] = bookPath;
-				mangas.save(series, doc, function(er){
-					if(er){
-						console.log(er);
-					}
-				});
-			}
-		});
-	}
-}
+
 
 app.get('/ajax/search', function(req, res){
 	// browser did 'post' but got empty result, 'get' seems to work better?
@@ -263,11 +316,12 @@ app.get('/ajax/deletebook', function(req, res){
 app.post('/ajax/generatebook', function(req, res){
 	var list = req.body.list;
 	var bookRef = req.body.bookref;
-	var id = req.body.id;
+	var id = req.body.id; //series id; number to get small thumb
 	var title = req.body.title;
 	var bookRefSplit = bookRef.split('/');
 	var series = bookRefSplit[1];
-	var bookId = bookRefSplit.slice(-1)[0];
+	var bookId = bookRefSplit.slice(-1)[0]; //in dbase
+	var nrOfPages = parseInt(req.body.pages, 10); //sending this fromn client because otherwise we'd have to regenerate it again
 	var error = 0;
 	// write in dbase -> no multiple generations of the same file at the same time
 	mangas.get(series, function(err, doc, key){
@@ -280,9 +334,13 @@ app.post('/ajax/generatebook', function(req, res){
 		else doc.books[bookId] = '#';
 		mangas.save(series, doc, function(err){
 			if(err) return res.json({err: error});
-
+			// ProgressHandler: stuff that makes it easier to monitor progress, make it optional
+			var progressHandler = new ProgressHandler(series, bookId, nrOfPages);
 			downloadChaptersFromList(list, function(err, pathList){
-				if(err) console.log(err);
+				if(err) {
+					console.log(err);
+					progressHandler.sendError(err);
+				}
 				else{
 					async.waterfall([
 						function(asyncDone){
@@ -294,13 +352,16 @@ app.post('/ajax/generatebook', function(req, res){
 							}
 						}],
 						function(error, onePath){
-							if(err) console.log(err);
+							if(err) {
+								console.log(err);
+								progressHandler.sendError(err);
+							}
 							var fileName = bookRefSplit.slice(0, -1).join('/') + '/' + series + '_' + bookId;
-							generator.generatEbook(onePath, __dirname + '/data/books' + fileName, series + ': ' + title, null, null, successHandler);
+							generator.generatEbook(onePath, __dirname + '/data/books' + fileName, series + ': ' + title, progressHandler);
 						}
 					);
 				}
-			});
+			}, progressHandler);
 			// Fire and forget; not in callback
 			res.json({err: 0});
 		});
@@ -474,7 +535,4 @@ app.get('/manga/:mangatitle', function(req, res){
 });
 
 
-http.createServer(app).listen(app.get('port'), function(){
-	console.log('Express server listening on port ' + app.get('port'));
-});
 
