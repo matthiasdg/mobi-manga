@@ -6,8 +6,6 @@ html
 		meta(name='viewport', content='initial-scale=1.0, user-scalable=no')
 		script(src='//code.jquery.com/jquery.min.js')
 		script(src='//ajax.microsoft.com/ajax/jquery.templates/beta1/jquery.tmpl.min.js')
-		script(src='//cdnjs.cloudflare.com/ajax/libs/underscore.js/1.4.2/underscore-min.js')
-		script(src='//cdnjs.cloudflare.com/ajax/libs/backbone.js/0.9.2/backbone-min.js')
 		script(src='//netdna.bootstrapcdn.com/twitter-bootstrap/2.3.1/js/bootstrap.min.js')
 		script(src='/socket.io/socket.io.js')
 		script(src='/javascripts/manga.js')
@@ -22,6 +20,13 @@ html
 				}
 		link(href="//netdna.bootstrapcdn.com/twitter-bootstrap/2.3.1/css/bootstrap-responsive.min.css", rel="stylesheet")
 		link(rel='stylesheet', href='/stylesheets/manga.css')
+		script#progresstemp(type='text/x-tmpl')
+			.progresswrapper
+				.progress
+					span.cap
+					.bar.imagebar(style="width: 0%;")
+					.bar.kccbar(style="width: 0%;")
+					.bar.mobibar(style="width: 0%;")
 
 	body
 		.navbar.navbar-inverse.navbar-fixed-top
@@ -63,8 +68,3 @@ html
 										a.chapterlink(href='#', onclick="Manga.checkForDownload('#{chapter.id}');return false;", data-url='#{chapter.url}') #{chapter.title}
 										.wrapper(class="#{chapiclass}")
 											i(class="#{chapicon}")
-
-
-
-
-

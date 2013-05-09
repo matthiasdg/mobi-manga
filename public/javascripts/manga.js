@@ -42,10 +42,70 @@ Manga = {
 				console.log('failed to reconnect');
 			});
 			var series = $('h2').parent().attr('id');
-			Manga.socket.on(series, function(data){console.log(data);});
+			Manga.socket.on(series, function(data){
+				if(data.bookId){
+					var $bookIdElem = $('#' + data.bookId);
+					var $progress = $bookIdElem.find('.progresswrapper');
+					// if no match -> no progress bar -> create one
+					if($progress.length === 0){
+						$progress = Manga.createProgressBar($bookIdElem);
+					}
+					Manga.processData(data, $progress, $bookIdElem);
+				}
+			});
 		}
 	},
 
+	processData: function(data, $progress, $bookIdElem){
+		switch(data.action){
+			case 'download':
+			$progress.find('.cap').text('Downloading images: ' + data.progress + '%');
+			$progress.find('.imagebar').css('width', data.progress/3 + '%');
+			break;
+
+			case 'kcc':
+			$progress.find('.cap').text('Converting to ePub: ' + data.progress + '%');
+			$progress.find('.kccbar').css('width', data.progress/3 + '%');
+			break;
+
+			case 'mobi':
+			$progress.find('.cap').text('Converting to mobi: ' + data.progress + '%');
+			$progress.find('.mobibar').css('width', data.progress/3 + '%');
+		};
+		if(data.error){
+			$progress.find('.cap').text('ERROR: ' + data.error);
+			// Refresh to get a new attempt at downloading; db entry is cleared
+		}
+		if(data.hasOwnProperty('exit') && data.exit == 0){
+			var $a = $bookIdElem.find('a').first();
+			// Replace url: download possible
+			$a.attr('data-url', data.file);
+			$a.show();
+			// remove progress bars
+			$progress.remove();
+			var $btnWrapper = $bookIdElem.children('.wrapper');
+			if($btnWrapper.length === 0){ //volumes have an additional level in between
+				$btnWrapper = $bookIdElem.find('.wrapper').first();
+				$btnWrapper.removeClass('wrapper').addClass('btn btn-mini btn-inverse');
+				// the timeout solves a problem in chrome where applying a btn to something that already floated, drops it to the next line
+				setTimeout(function(){$btnWrapper.addClass('wrapper');}, 100);
+			}
+			else{ // we're dealing with a chapter
+				$btnWrapper.removeClass('wrapper').addClass('btn btn-mini');
+				// the timeout solves a problem in chrome where applying a btn to something that already floated, drops it to the next line
+				setTimeout(function(){$btnWrapper.addClass('wrapper');}, 100);
+			}
+			$btnWrapper.children('i').first().removeClass('icon-refresh').addClass('icon-remove');
+		}
+	},
+
+	createProgressBar: function($bookIdElem){
+		var $progressBar = $('#progresstemp').tmpl();
+		var $a = $bookIdElem.find('a').first();
+		$a.hide();
+		$a.parent().append($progressBar);
+		return $progressBar;
+	},
 
 	deletEbook: function(seriesKey, bookId){
 		$.get('/ajax/deletebook', {key: seriesKey, field: bookId}, function(data){

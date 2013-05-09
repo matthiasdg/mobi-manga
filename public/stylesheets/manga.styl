@@ -33,9 +33,9 @@ ul
 
 
 .wrapper
-	float right
-	margin-top 12px
-	margin-right 5px
+	float right !important
+	margin-top 12px !important
+	margin-right 5px !important
 
 
 // animate icon-refresh
@@ -88,6 +88,48 @@ ul
 	text-overflow ellipsis
 	overflow hidden
 
+.progresswrapper
+	position relative
+	width 80%
+	padding 10px 0px 10px 10px
+.progress
+	margin 0px 0px 0px 0px
+.cap
+	position absolute
+	text-align center
+	width 100%
+	font-size x-small
+
+.volumetop .cap
+	color black
+.chapter .cap
+	color white
+
+.chapter .progress
+	background-color #424242
+	background-image linear-gradient(to bottom, #424242, #2E2E2E, #424242)
+.chapter .progress .imagebar
+	background-color #380B61
+	background-image: linear-gradient(to bottom, #370A60, #6A0888)
+.chapter .progress .kccbar
+	background-color #B40486
+	background-image linear-gradient(to bottom, #6A0888, #DF01A5)
+.chapter .progress .mobibar
+	background-color #FE2E64
+	background-image linear-gradient(to bottom, #DF01A5, #FA5882)
+
+.volumetop .progress
+	background-color #F2F2F2
+	background-image linear-gradient(to bottom, #FAFAFA, #F2F2F2, #FAFAFA)
+.volumetop .progress .imagebar
+	background-color #80FF00
+	background-image: linear-gradient(to bottom, #40FF00, #D0FA58)
+.volumetop .progress .kccbar
+	background-color #D0FA58
+	background-image: linear-gradient(to bottom, #C8FE2E, #F2F5A9)
+.volumetop .progress .mobibar
+	background-color #D0F5A9
+	background-image: linear-gradient(to bottom, #D0FA58, #F5F6CE)
 
 .chapterlist
 	li:nth-child(even)

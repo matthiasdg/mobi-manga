@@ -110,7 +110,7 @@ ProgressHandler.prototype.sendEnd = function(exitCode, fileName){
 					if(er){
 						console.log(er);
 					}
-					io.sockets.emit(series, {exit: exitCode, file: '/data/books/' + bookPath});
+					io.sockets.emit(series, {bookId: bookId, exit: exitCode, file: '/data/books/' + bookPath});
 				});
 			}
 		});
