@@ -13,6 +13,7 @@
     "stylus": "*",
     "async": "0.2.7",
     "fs-extra": "~0.6.0",
-    "socket.io": "~0.9.14"
+    "socket.io": "~0.9.14",
+    "nstore": "~0.5.2"
   }
 }
