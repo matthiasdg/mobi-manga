@@ -21,7 +21,7 @@ ul
 	list-style-type none
 
 
-// kindle browser not supporting position fixed ->override and set position in JS
+// kindle browser not supporting position fixed from modal ->override and set position in JS
 
 .modal
 	position absolute
@@ -92,29 +92,32 @@ ul
 	position relative
 	width 80%
 	padding 10px 0px 10px 10px
-.progress
-	margin 0px 0px 0px 0px
+
 .cap
 	position absolute
 	text-align center
 	width 100%
 	font-size x-small
-
-.cap
+	left 0px
+	padding-left 10px
 	color black
 
 .progress
+	margin 0px 0px 0px 0px
 	background-color #F2F2F2
 	background-image linear-gradient(to bottom, #FAFAFA, #F2F2F2, #FAFAFA)
+
 .progress .imagebar
 	background-color #80FF00
-	background-image: linear-gradient(to bottom, #40FF00, #D0FA58)
+	background-image linear-gradient(to bottom, #40FF00, #D0FA58)
+
 .progress .kccbar
 	background-color #D0FA58
-	background-image: linear-gradient(to bottom, #C8FE2E, #F2F5A9)
+	background-image linear-gradient(to bottom, #C8FE2E, #F2F5A9)
+
 .progress .mobibar
 	background-color #D0F5A9
-	background-image: linear-gradient(to bottom, #D0FA58, #F5F6CE)
+	background-image linear-gradient(to bottom, #D0FA58, #F5F6CE)
 
 .chapterlist
 	li:nth-child(even)
