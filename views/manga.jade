@@ -4,6 +4,13 @@ html
 		title= title
 		meta(charset='utf-8')
 		meta(name='viewport', content='initial-scale=1.0, user-scalable=no')
+		link(rel='stylesheet', href="//netdna.bootstrapcdn.com/twitter-bootstrap/2.3.1/css/bootstrap.min.css")
+		style
+			body {
+				padding-top: 60px; /* 60px to make the container go all the way to the bottom of the topbar */
+				}
+		link(href="//netdna.bootstrapcdn.com/twitter-bootstrap/2.3.1/css/bootstrap-responsive.min.css", rel="stylesheet")
+		link(rel='stylesheet', href='/stylesheets/manga.css')
 		script(src='//code.jquery.com/jquery.min.js')
 		script(src='//ajax.microsoft.com/ajax/jquery.templates/beta1/jquery.tmpl.min.js')
 		script(src='//netdna.bootstrapcdn.com/twitter-bootstrap/2.3.1/js/bootstrap.min.js')
@@ -12,14 +19,6 @@ html
 		script(src='/javascripts/bootbox.min.js')
 		script(src='/javascripts/spin.min.js')
 		script(src='/javascripts/jquery.spin.js')
-
-		link(rel='stylesheet', href="//netdna.bootstrapcdn.com/twitter-bootstrap/2.3.1/css/bootstrap.min.css")
-		style
-			body {
-				padding-top: 60px; /* 60px to make the container go all the way to the bottom of the topbar */
-				}
-		link(href="//netdna.bootstrapcdn.com/twitter-bootstrap/2.3.1/css/bootstrap-responsive.min.css", rel="stylesheet")
-		link(rel='stylesheet', href='/stylesheets/manga.css')
 		script#progresstemp(type='text/x-tmpl')
 			.progresswrapper
 				.progress

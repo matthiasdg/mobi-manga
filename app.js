@@ -29,9 +29,11 @@ app.use(express.favicon());
 app.use(express.logger('tiny'));
 app.use(express.bodyParser());
 app.use(express.methodOverride());
+app.use(express.compress());
 app.use(app.router);
 app.use(require('stylus').middleware(__dirname + '/public'));
-app.use('/data', express.static(path.join(__dirname, 'data')));
+var oneYear = 31536000000;
+app.use('/data', express.static(path.join(__dirname, 'data'), {maxAge: oneYear}));
 app.use(express.static(path.join(__dirname, 'public')));
 
 // development only
