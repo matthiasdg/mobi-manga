@@ -300,11 +300,8 @@ app.get('/ajax/deletebook', function(req, res){
 	var id = req.query.field;
 	mangas.get(key, function(err, obj, k){
 		if(err) return res.json({err: err});
-		console.log(JSON.stringify(obj));
-		console.log(obj.books[id]);
 		fs.remove(path.join(__dirname, 'data', 'books', obj.books[id]));
 		delete obj.books[id];
-		console.log(JSON.stringify(obj));
 		mangas.save(key, obj, function(er){
 			if(err) return res.json({err:err});
 			res.json({err:0});
