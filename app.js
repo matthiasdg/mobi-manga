@@ -1,3 +1,32 @@
+/******************************************************************************
+
+Copyright (c) 2013 Matthias De Geyter <matthias.degeyter@gmail.com>
+
+MIT License
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+******************************************************************************/
+
+
+
+
 
 /**
  * Module dependencies.
@@ -10,9 +39,9 @@ var express = require('express')
 	, async = require('async')
 	, fs = require('fs-extra')
 	, nStore = require('nstore')
-	, nStore = nStore.extend(require('nstore/query')())
 	, socketio = require('socket.io')
 	, path = require('path');
+nStore = nStore.extend(require('nstore/query')());
 
 var app = express();
 var mangas = nStore.new(__dirname + '/data/mangas.db', function(){
@@ -73,7 +102,7 @@ ProgressHandler.prototype.sendProgress = function(action){
 
 ProgressHandler.prototype.sendError = function(error){
 	io.sockets.emit(this.series, {bookId: this.bookId, error: error});
-	// maybe we should clean up files, but probably not necessary since images overwrite
+	// maybe we should clean up files, but probably not necessary since images overwrite + you can retry manually
 	// clear db entry, though!
 	var series = this.series;
 	var bookId = this.bookId;
@@ -302,12 +331,15 @@ app.get('/ajax/deletebook', function(req, res){
 	var id = req.query.field;
 	mangas.get(key, function(err, obj, k){
 		if(err) return res.json({err: err});
-		fs.remove(path.join(__dirname, 'data', 'books', obj.books[id]));
-		delete obj.books[id];
-		mangas.save(key, obj, function(er){
-			if(err) return res.json({err:err});
-			res.json({err:0});
-		});
+		// check id for safety
+		if(id && id.match(/v|c[0-9]+/i) && obj.books[id]){
+			fs.remove(path.join(__dirname, 'data', 'books', obj.books[id]));
+			delete obj.books[id];
+			mangas.save(key, obj, function(er){
+				if(err) return res.json({err:err});
+				res.json({err:0});
+			});
+		}
 	});
 });
 

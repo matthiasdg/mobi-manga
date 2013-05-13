@@ -1,6 +1,6 @@
 // Generator: defines tool used to generate ebook from image folder.
 // Currently kcc is implemented ( https://github.com/ciromattia/kcc ), since it provides the best experience.
-// Calibre is another tested -not yet implemented- possibility (by installing command line tools and using ebook-convert).
+// Calibre is another tested -probably never to be implemented- possibility (by installing command line tools and using ebook-convert).
 // The calibre workflow requires zipping the image folder and renaming it to .cbz, followed by
 // something like 'ebook-convert input.cbz output.mobi --no-inline-toc --keep-aspect-ratio --output-profile=kindle_pw'
 // (for kindle paperwhite)

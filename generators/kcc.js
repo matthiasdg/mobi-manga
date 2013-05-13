@@ -15,7 +15,7 @@ function parseKccOut(data, progressHandler){
 		progressHandler.processedPages = currentPage;
 		progressHandler.sendProgress('kcc');
 	}
-	console.log((new Date()).toString() + ' -- ' + data.toString());
+	console.log((new Date()).toString() + ' -- ' + data);
 }
 
 function parseMobiOut(data, progressHandler){
@@ -25,7 +25,7 @@ function parseMobiOut(data, progressHandler){
 		progressHandler.processedPages = currentPage;
 		progressHandler.sendProgress('mobi');
 	}
-	console.log((new Date()).toString() + ' -- ' + data.toString());
+	console.log((new Date()).toString() + ' -- ' + data);
 }
 
 function generateMobi(epubFile, progressHandler){
@@ -39,7 +39,7 @@ function generateMobi(epubFile, progressHandler){
 
 	mobi.stderr.on('data', function (data) {
 	  console.log('stderr at: ' + (new Date()).toString() + ' - ' + data);
-	  progressHandler.sendError(data);
+	  progressHandler.sendError(data.toString());
 	});
 
 	mobi.on('exit', function(code){
@@ -79,7 +79,7 @@ function generatEbook(inputFolder, outputFile, title, progressHandler){
 
 			kcc.stderr.on('data', function (data) {
 			  console.log('stderr at: ' + (new Date()).toString() + ' - ' + data);
-			  progressHandler.sendError(data);
+			  progressHandler.sendError(data.toString());
 			});
 
 			kcc.on('exit', function(code){
