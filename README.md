@@ -1,6 +1,6 @@
 # Mobi-Manga
 
-Mobi-Manga is a webapp I built on [express 3](https://github.com/visionmedia/express/). The back-end acts as a proxy/scraper/ebook generator for [MangaFox](http://mangafox.me). The client (built with [bootstrap](https://github.com/twitter/bootstrap) and running fine in Kindle's experimental browser) allows you to search mangafox, and to request the creation, download or removal of ebooks generated from individual chapters or volumes.
+Mobi-Manga is a webapp I built on [express 3](https://github.com/visionmedia/express/). The back-end acts as a proxy/scraper/ebook generator for MangaFox. The client (built with [bootstrap](https://github.com/twitter/bootstrap) and running fine in Kindle's experimental browser) allows you to search mangafox, and to request the creation, download or removal of ebooks generated from individual chapters or volumes.
 
 ## Background
 
